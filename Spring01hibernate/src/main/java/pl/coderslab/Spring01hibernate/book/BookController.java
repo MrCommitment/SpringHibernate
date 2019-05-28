@@ -2,14 +2,16 @@ package pl.coderslab.Spring01hibernate.book;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestAttribute;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.ModelAndView;
 import pl.coderslab.Spring01hibernate.author.Author;
 import pl.coderslab.Spring01hibernate.author.AuthorDao;
 import pl.coderslab.Spring01hibernate.publisher.Publisher;
 import pl.coderslab.Spring01hibernate.publisher.PublisherDao;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/book")
@@ -23,6 +25,34 @@ public class BookController {
 
     @Autowired
     private AuthorDao authorDao;
+
+
+    @ModelAttribute("publishers")
+    public List<Publisher> findAllPublishers() {
+        return publisherDao.findAll();
+    }
+
+    @ModelAttribute("allBooks")
+    public List<Book> allBooks() {
+        return bookDao.findAll();
+    }
+
+    @GetMapping("/addBook")
+    public String addBook(Model model) {
+        model.addAttribute("book", new Book());
+        return "book/add";
+    }
+
+    @PostMapping("/addBook")
+    public String saveBook(@ModelAttribute Book book) {
+        bookDao.persist(book);
+        return "redirect:/book/viewBooks";
+    }
+
+    @GetMapping("/viewBooks")
+    public String redirect() {
+        return "book/viewAllBooks";
+    }
 
     @RequestMapping("/add/{authorId}/{title}")
     @ResponseBody

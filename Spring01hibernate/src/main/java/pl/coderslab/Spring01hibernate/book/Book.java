@@ -22,7 +22,7 @@ public class Book {
 
     private int rating;
 
-    @ManyToOne(cascade = CascadeType.PERSIST)
+    @ManyToOne(cascade = CascadeType.MERGE)
     private Publisher publisher;
 
     private String description;
