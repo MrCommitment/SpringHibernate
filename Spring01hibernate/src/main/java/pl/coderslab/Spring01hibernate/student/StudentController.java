@@ -29,15 +29,20 @@ public class StudentController {
         return Arrays.asList("Sport", "Automotive", "Travel");
     }
 
-    @GetMapping("/addStudent")
+    @GetMapping("/add")
     public String addStudent(Model model) {
         model.addAttribute("newStudent", new Student());
         return "student/add";
     }
 
-    @PostMapping("/addStudent")
+    @PostMapping("/add")
     public String addStudentPost(@ModelAttribute Student student) {
         return "student/view";
+    }
+
+    @GetMapping("/home")
+    public String goHome() {
+        return "redirect:/";
     }
 
 }

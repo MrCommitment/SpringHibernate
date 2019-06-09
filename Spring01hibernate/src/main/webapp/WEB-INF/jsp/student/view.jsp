@@ -1,7 +1,12 @@
 <%@ taglib prefix = "c" uri = "http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="form"
+           uri="http://www.springframework.org/tags/form" %>
 
+<h2> Dodany student </h2>
 
-<h2> Added student </h2>
+<form:form method = "GET" action = "home">
+    <input type = "submit" value = "Ekran glowny"/>
+</form:form>
 
 First name: ${student.firstName} <br />
 Last name: ${student.lastName} <br />
@@ -25,10 +30,9 @@ Mailing list:
 Programming skills: <br />
 <c:forEach items="${student.programmingSkills}" var="skills">
         ${skills}<br />
-</c:forEach> <br />
+</c:forEach>
 
 Hobbies: <br />
 <c:forEach items="${student.hobbies}" var="hobby">
         ${hobby}<br>
 </c:forEach>
-<br />

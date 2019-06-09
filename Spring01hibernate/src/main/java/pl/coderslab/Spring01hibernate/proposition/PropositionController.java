@@ -1,4 +1,4 @@
-package pl.coderslab.Spring01hibernate.book;
+package pl.coderslab.Spring01hibernate.proposition;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -6,26 +6,32 @@ import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 import pl.coderslab.Spring01hibernate.Category;
 import pl.coderslab.Spring01hibernate.author.Author;
+import pl.coderslab.Spring01hibernate.book.Book;
+import pl.coderslab.Spring01hibernate.book.BookViewMode;
 import pl.coderslab.Spring01hibernate.commons.ViewMode;
 import pl.coderslab.Spring01hibernate.publisher.Publisher;
 import pl.coderslab.Spring01hibernate.repository.AuthorRepository;
 import pl.coderslab.Spring01hibernate.repository.BookRepository;
 import pl.coderslab.Spring01hibernate.repository.CategoryRepository;
 import pl.coderslab.Spring01hibernate.repository.PublisherRepository;
-import pl.coderslab.Spring01hibernate.validation.BookValidationGroup;
+import pl.coderslab.Spring01hibernate.validation.PropositionValidationGroup;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Controller
-@RequestMapping("/book")
-public class BookController {
+@RequestMapping("/proposition")
+public class PropositionController {
+
+    @Autowired
+    private BookRepository bookRepository;
 
     @Autowired
     private PublisherRepository publisherRepository;
@@ -36,9 +42,6 @@ public class BookController {
     @Autowired
     private CategoryRepository categoryRepository;
 
-    @Autowired
-    private BookRepository bookRepository;
-
 
     @ModelAttribute("publishers")
     public List<Publisher> findAllPublishers() {
@@ -48,23 +51,18 @@ public class BookController {
     @ModelAttribute("allBooks")
     public List<Book> allBooks(@ModelAttribute BookViewMode viewMode) {
         if("all".equals(viewMode.getSearchMode())) {
-            return bookRepository.findBooksByPropositionIsFalse();
+            return bookRepository.findBooksByPropositionIsTrue();
         }
         if("category".equals(viewMode.getSearchMode())) {
-            return bookRepository.findBooksByCategoryAndProposition(viewMode.getCategorySearch(), false);
+            return bookRepository.findBooksByCategoryAndProposition(viewMode.getCategorySearch(), true);
         }
         if("title".equals(viewMode.getSearchMode())) {
-            return bookRepository.findTitle(viewMode.getTitleSearch(), false);
+            return bookRepository.findBookByTitleAndProposition(viewMode.getTitleSearch(), true);
         }
         if("publisher".equals(viewMode.getSearchMode())) {
-            return bookRepository.findBooksByPublisherAndProposition(viewMode.getPublisherSearch(), false);
+            return bookRepository.findBooksByPublisherAndProposition(viewMode.getPublisherSearch(), true);
         }
         return new ArrayList<>();
-    }
-
-    @ModelAttribute("allAuthors")
-    public List<Author> allAuthors() {
-        return authorRepository.findAll();
     }
 
     @ModelAttribute("allCategories")
@@ -72,20 +70,26 @@ public class BookController {
         return categoryRepository.findAll();
     }
 
+    @ModelAttribute("allAuthors")
+    public List<Author> allAuthors() {
+        return authorRepository.findAll();
+    }
+
     @GetMapping("/add")
-    public String addBook(Model model) {
+    public String addProposition(Model model) {
         model.addAttribute("book", new Book());
         return "book/addAndEdit";
     }
 
     @PostMapping("/add")
-    public String saveBook(@ModelAttribute @Validated(BookValidationGroup.class) Book book, BindingResult bindingResult) {
+    public String addProposition(@ModelAttribute @Validated(PropositionValidationGroup.class) Book book, BindingResult bindingResult) {
         if(bindingResult.hasErrors()) {
             return "book/addAndEdit";
         }
+        book.setProposition(true);
         book.getAuthors().forEach(a -> a.getBooks().add(book));
         bookRepository.save(book);
-        return "redirect:/book/all";
+        return "redirect:/proposition/all";
     }
 
     @GetMapping("/all")
@@ -96,24 +100,19 @@ public class BookController {
 
     @PostMapping("/all")
     public ModelAndView postAction(@ModelAttribute BookViewMode viewMode, ModelMap modelMap){
+        modelMap.addAttribute("bookId", viewMode.getObjectId());
         if("edit".equals(viewMode.getMode())) {
-            modelMap.addAttribute("bookId", viewMode.getObjectId());
-            return new ModelAndView("redirect:/book/edit", modelMap);
+            return new ModelAndView("redirect:/proposition/edit", modelMap);
         }
         if("remove".equals(viewMode.getMode())) {
-            modelMap.addAttribute("bookId", viewMode.getObjectId());
-            return new ModelAndView("redirect:/book/remove", modelMap);
-        }
-        if("resetRating".equals(viewMode.getMode())) {
-            bookRepository.resetRating(viewMode.getResetRating());
-            return new ModelAndView("redirect:/book/all");
+            return new ModelAndView("redirect:/proposition/remove", modelMap);
         }
         return new ModelAndView("/book/all");
     }
 
     @GetMapping("/remove")
     public String removeBook(@ModelAttribute("bookId") long id, Model model) {
-        model.addAttribute("book", bookRepository.findById(id));
+        model.addAttribute("book", bookRepository.findById(id).get());
         return "book/remove";
     }
 
@@ -122,7 +121,7 @@ public class BookController {
         Book b = bookRepository.findById(book.getId()).get();
         b.getAuthors().forEach(a -> a.getBooks().remove(b));
         bookRepository.delete(book);
-        return "redirect:/book/all";
+        return "redirect:/proposition/all";
     }
 
     @GetMapping("/edit")
@@ -137,13 +136,14 @@ public class BookController {
     }
 
     @PostMapping("/edit")
-    public String editAuthor(@ModelAttribute @Validated(BookValidationGroup.class) Book book, BindingResult result) {
+    public String editAuthor(@ModelAttribute @Validated(PropositionValidationGroup.class) Book book, BindingResult result) {
         if(result.hasErrors()) {
             return "book/addAndEdit";
         }
+        book.setProposition(true);
         book.getAuthors().forEach(a -> a.getBooks().add(book));
         bookRepository.save(book);
-        return "redirect:/book/all";
+        return "redirect:/proposition/all";
     }
 
     @GetMapping("/home")
